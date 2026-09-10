@@ -33,6 +33,10 @@ npm run preview
 - `public/og-image.png` (1200×630): tarjeta negra con el título y muestra de letras-imagen.
 - Regenerar tras cambiar assets: `python scripts/make-brand-assets.py` (requiere Pillow).
 
+## Publicar en GitHub Pages
+
+Despliegue automático con `.github/workflows/deploy.yml` (repo → Settings → Pages → Source: “GitHub Actions”). URL: `https://leonardobringashello-oss.github.io/chatgpt-images-2.5/`. Si renombras el repo, ajusta `base` en `astro.config.mjs`.
+
 ## Cómo funciona
 
 - `src/data/letters.ts`: mapa `char -> images[]` (las variantes `-1/-2` ciclan en cada `mouseenter`, como el `2` globo/LED original).
