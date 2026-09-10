@@ -22,36 +22,16 @@ Solo el efecto, no una página completa. Demo mínima incluida.
 ```bash
 npm install
 npm run download-assets  # ya ejecutado: 26 imgs en public/assets/letters
-npm run dev              # http://localhost:4321
-npm run build            # salida estática en dist/
-npm run preview          # previsualizar el build
+npm run dev
+npm run build
+npm run preview
 ```
 
 ## Marca: favicon + og:image
 
-- `public/favicon.svg` + `public/favicon-32.png` + `public/apple-touch-icon.png`: cuadrado negro con “a” blanca y punto mantequilla (guiño al hover de la tostada).
-- `public/og-image.png` (1200×630): tarjeta negra con el título y muestra de letras-imagen (C manuscrita, tostada, globo 2).
+- `public/favicon.svg` + `public/favicon-32.png` + `public/apple-touch-icon.png`: cuadrado negro con “a” blanca y punto mantequilla.
+- `public/og-image.png` (1200×630): tarjeta negra con el título y muestra de letras-imagen.
 - Regenerar tras cambiar assets: `python scripts/make-brand-assets.py` (requiere Pillow).
-
-## Publicar en GitHub Pages
-
-URL final: `https://leonardobringashello-oss.github.io/chatgpt-images-hover-title/`
-
-1. En tu cuenta secundaria crea el repo **`chatgpt-images-hover-title`** (público, sin README inicial).
-2. Sube el código:
-   ```bash
-   git init
-   git add .
-   git commit -m "Efecto hover estilo ChatGPT Images 2.5 (Astro + Tailwind)"
-   git branch -M main
-   git remote add origin https://github.com/leonardobringashello-oss/chatgpt-images-hover-title.git
-   git push -u origin main
-   ```
-3. En el repo → **Settings → Pages → Source: “GitHub Actions”**.
-4. Cada push a `main` ejecuta `.github/workflows/deploy.yml` (instala, construye y publica `dist/`).
-5. Comprueba: favicon en pestaña, tarjeta al compartir el enlace, y DevTools → Lighthouse (contrastes ya en ~10:1).
-
-> Si mantienes el nombre `efecto-chatgpt-images-2.5`, cambia `base` en `astro.config.mjs` por `'/efecto-chatgpt-images-2.5/'` (con ambas barras).
 
 ## Cómo funciona
 
