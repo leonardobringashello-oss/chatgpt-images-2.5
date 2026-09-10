@@ -18,11 +18,11 @@ const { autoplay = true, staggerMs = 90 } = Astro.props;
 >
   <span class="block" aria-hidden="true">Introducing</span>
   <span class="hover-line" aria-hidden="true" data-hover-title><span class="hover-word">{CHAT_GPT.map((l, i) => (
-        <HoverLetter char={l.char} images={l.images} alt={l.alt} eager={i < 3} />
+        <HoverLetter char={l.char} images={l.images} alt={l.alt} imgH={l.imgH} eager={i < 3} />
       ))}</span><span class="hover-space" aria-hidden="true"> </span><span class="hover-word">{IMAGES_WORD.map((l) => (
-        <HoverLetter char={l.char} images={l.images} alt={l.alt} />
+        <HoverLetter char={l.char} images={l.images} alt={l.alt} imgH={l.imgH} />
       ))}</span><span class="hover-space" aria-hidden="true"> </span><span class="hover-word">{VERSION_PART.map((l) => (
-        <HoverLetter char={l.char} images={l.images} alt={l.alt} />
+        <HoverLetter char={l.char} images={l.images} alt={l.alt} imgH={l.imgH} />
       ))}</span></span>
 </h1>
 

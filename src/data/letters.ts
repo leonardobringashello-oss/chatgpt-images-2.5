@@ -6,13 +6,17 @@ export interface LetterVariants {
   char: string;
   images: string[];
   alt: string;
+  // Altura de la imagen en hover, en em. Por defecto 0.88 (altura de letra).
+  // El punto es una carita pequeña: debe medir como un punto, no como un dígito.
+  imgH?: number;
 }
 
-const L = (char: string, images: string[], alt: string): LetterVariants => ({
+const L = (char: string, images: string[], alt: string, imgH?: number): LetterVariants => ({
   char,
   // BASE_URL termina en '/': '/' en dev, '/<repo>/' en build para GitHub Pages
   images: images.map((f) => `${import.meta.env.BASE_URL}assets/letters/${f}`),
   alt,
+  ...(imgH ? { imgH } : {}),
 });
 
 export const CHAT_GPT: LetterVariants[] = [
@@ -38,6 +42,6 @@ export const IMAGES_WORD: LetterVariants[] = [
 
 export const VERSION_PART: LetterVariants[] = [
   L('2', ['Custom_2-1.png', 'Custom_2-2.png'], 'Number 2 in a hot air balloon and in LED'),
-  L('.', ['Custom_period.png'], 'Period'),
+  L('.', ['Custom_period.png'], 'Period', 0.24),
   L('5', ['Custom5-1.png', 'Custom5-2.png'], 'Number 5'),
 ];

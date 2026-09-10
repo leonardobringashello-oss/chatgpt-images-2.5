@@ -11,8 +11,9 @@ interface Props {
   images: string[];
   alt: string;
   eager?: boolean;
+  imgH?: number;
 }
-const { char, images, alt, eager = false } = Astro.props;
+const { char, images, alt, eager = false, imgH = 0.88 } = Astro.props;
 const first = images[0];
 const hasVariants = images.length > 1;
 ---
@@ -23,6 +24,8 @@ const hasVariants = images.length > 1;
   aria-label={alt}
   data-images={JSON.stringify(images)}
   data-index="0"
+  data-img-h={imgH}
+  style={`--img-h:${imgH}em`}
 >
   <span class="hl-char" aria-hidden="true">{char}</span>
   <img
@@ -41,55 +44,187 @@ const hasVariants = images.length > 1;
 
 <script>
   // Hidrata todos los .hl de la página una sola vez (sin framework).
-  // - mouseenter: cicla variante si hay 2 (como el "2" globo/LED de OpenAI)
-  // - click/tap: toggle para táctil
-  // - teclado Enter/Espacio: toggle
-  
+  // Visual: la imagen entra en flujo en hover (cada variante con su ancho).
+  // Suavidad: FLIP — se fija el ancho en px, se anima al objetivo y al volver
+  // a reposo se suelta (width='' ), así el reposo siempre es natural y no
+  // puede solaparse. Sin movimiento reducido; con reduce es instantáneo.
   function initHoverLetters() {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    document.querySelectorAll<HTMLElement>('.hl').forEach((el) => {
-      if (el.dataset.init) return;
-      el.dataset.init = '1';
-      const images: string[] = JSON.parse(el.dataset.images || '[]');
-      const img = el.querySelector<HTMLImageElement>('.hl-img');
-      if (!img || images.length < 2) {
-        // aun sin variantes, soporta tap/teclado con .is-active
-        el.addEventListener('click', () => el.classList.toggle('is-active'));
-        el.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            el.classList.toggle('is-active');
-          }
-        });
+    const FLIP = !reduce;
+    if (FLIP) document.body.classList.add('js-anim');
+
+    // Debe coincidir con .hl-img (height --img-h, hover scale 1.06).
+    // Cada letra puede traer su altura en data-img-h (el punto: 0.24em).
+    const IMG_SCALE = 1.06;
+    const IMG_PAD_EM = 0.06;
+    function imgHem(el) {
+      const v = parseFloat(el.dataset.imgH || '');
+      return v > 0 ? v : 0.88;
+    }
+
+    const dims = new Map();
+    function remember(src, w, h) {
+      if (src && w && h) dims.set(src, { w, h });
+    }
+    function probe(src) {
+      if (!src || dims.has(src)) return;
+      const im = new Image();
+      im.src = src;
+      if (im.complete && im.naturalWidth) remember(src, im.naturalWidth, im.naturalHeight);
+      else im.onload = () => remember(src, im.naturalWidth, im.naturalHeight);
+    }
+    function fontPx(el) {
+      return parseFloat(getComputedStyle(el).fontSize) || 16;
+    }
+    // Ancho natural de la letra: .hl-char en absoluta sigue midiendo
+    // shrink-to-fit, así vale tanto en reposo como en hover.
+    function charWpx(el) {
+      const c = el.querySelector('.hl-char');
+      const w = c ? c.getBoundingClientRect().width : 0;
+      return w > 0 ? w : el.getBoundingClientRect().width;
+    }
+    function imgWpx(el, src) {
+      const f = fontPx(el);
+      const h = imgHem(el);
+      const d = dims.get(src);
+      if (d) return ((d.w / d.h) * h * IMG_SCALE + IMG_PAD_EM) * f;
+      const img = el.querySelector('.hl-img');
+      if (img && img.naturalWidth)
+        return ((img.naturalWidth / img.naturalHeight) * h * IMG_SCALE + IMG_PAD_EM) * f;
+      return Math.max(charWpx(el), 0.6 * f);
+    }
+    function expand(el) {
+      if (el.dataset.open === '1') return;
+      el.dataset.open = '1';
+      el.classList.add('show-img');
+      if (!FLIP) return;
+      el.style.width = charWpx(el) + 'px';
+      void el.offsetWidth;
+      const img = el.querySelector('.hl-img');
+      const target = imgWpx(el, img ? img.getAttribute('src') : '');
+      requestAnimationFrame(() => {
+        el.style.width = target + 'px';
+      });
+    }
+    function collapse(el) {
+      if (el.dataset.open !== '1') return;
+      el.dataset.open = '0';
+      if (!FLIP) {
+        el.classList.remove('show-img');
         return;
       }
-      let i = 0;
-      el.addEventListener('mouseenter', () => {
-        i = (i + 1) % images.length;
-        // precarga suave: cambia solo cuando la siguiente ya está en caché
-        const next = new Image();
-        next.src = images[i];
-        const apply = () => {
-          img.src = images[i];
-          el.dataset.index = String(i);
-        };
-        if (next.complete) apply();
-        else {
-          next.onload = apply;
-          // fallback por si tarda: aplica igual a los 120ms
-          setTimeout(apply, 120);
-        }
+      el.style.width = el.getBoundingClientRect().width + 'px';
+      void el.offsetWidth;
+      el.classList.remove('show-img');
+      const end = charWpx(el);
+      requestAnimationFrame(() => {
+        el.style.width = end + 'px';
       });
-      el.addEventListener('click', () => el.classList.toggle('is-active'));
+    }
+
+    document.querySelectorAll('.hl').forEach((el) => {
+      if (el.dataset.init) return;
+      el.dataset.init = '1';
+      const images = JSON.parse(el.dataset.images || '[]');
+      const img = el.querySelector('.hl-img');
+      images.forEach(probe);
+      if (img) {
+        probe(img.getAttribute('src'));
+        // Si la imagen (o una variante) termina de cargar en pleno hover,
+        // corrige el ancho objetivo de forma continua.
+        img.addEventListener('load', () => {
+          remember(img.getAttribute('src'), img.naturalWidth, img.naturalHeight);
+          if (el.dataset.open === '1' && FLIP) {
+            el.style.width = imgWpx(el, img.getAttribute('src')) + 'px';
+          }
+        });
+      }
+      // Al volver a reposo se suelta el ancho: el reposo siempre es natural.
+      el.addEventListener('transitionend', (e) => {
+        if (e.propertyName === 'width' && el.dataset.open !== '1') el.style.width = '';
+      });
+
+      let i = 0;
+      const cycle = () => {
+        if (!img || images.length < 2) return;
+        i = (i + 1) % images.length;
+        const src = images[i];
+        probe(src);
+        const apply = () => {
+          img.setAttribute('src', src);
+          el.dataset.index = String(i);
+          const d = dims.get(src);
+          if (d) remember(src, d.w, d.h);
+          if (el.dataset.open === '1' && FLIP && dims.get(src)) {
+            el.style.width = imgWpx(el, src) + 'px';
+          }
+        };
+        const known = dims.get(src);
+        if (known) {
+          apply();
+          return;
+        }
+        const next = new Image();
+        next.src = src;
+        if (next.complete && next.naturalWidth) {
+          remember(src, next.naturalWidth, next.naturalHeight);
+          apply();
+        } else {
+          next.onload = () => {
+            remember(src, next.naturalWidth, next.naturalHeight);
+            apply();
+          };
+          setTimeout(apply, 120); // fallback: el load corrige el ancho
+        }
+      };
+
+      el.addEventListener('pointerenter', () => {
+        cycle();
+        expand(el);
+      });
+      el.addEventListener('pointerleave', () => collapse(el));
+      el.addEventListener('focus', () => expand(el));
+      el.addEventListener('blur', () => collapse(el));
+      const toggle = () => {
+        if (el.dataset.open === '1') collapse(el);
+        else {
+          if (el.dataset.open !== '1' && images.length > 1 && matchMedia('(hover: none)').matches) cycle();
+          expand(el);
+        }
+      };
+      el.addEventListener('click', toggle);
       el.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          el.classList.toggle('is-active');
+          toggle();
         }
       });
-      // en táctil, el primer tap muestra, el segundo esconde (sin navegación)
-      if (reduce) el.classList.remove('is-active');
+
+      // Autoplay externo (HoverTitle) usa .is-active: se anima igual.
+      if (FLIP) {
+        new MutationObserver(() => {
+          const on = el.classList.contains('is-active');
+          if (on && el.dataset.open !== '1') expand(el);
+          else if (!on && el.dataset.open === '1' && !el.matches(':hover') && document.activeElement !== el) collapse(el);
+        }).observe(el, { attributes: true, attributeFilter: ['class'] });
+      }
     });
+
+    // Reposo sin anchos en línea: el resize es seguro. Solo se reajustan
+    // las que estén abiertas en ese momento.
+    if (FLIP && !window.__hlFlipResize) {
+      window.__hlFlipResize = true;
+      let t;
+      window.addEventListener('resize', () => {
+        clearTimeout(t);
+        t = setTimeout(() => {
+          document.querySelectorAll('.hl[data-open="1"]').forEach((el) => {
+            const img = el.querySelector('.hl-img');
+            el.style.width = imgWpx(el, img ? img.getAttribute('src') : '') + 'px';
+          });
+        }, 150);
+      });
+    }
   }
   initHoverLetters();
   // re-ejecuta si Astro navega con View Transitions
