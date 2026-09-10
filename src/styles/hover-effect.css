@@ -1,0 +1,90 @@
+/* OpenAI "ChatGPT Images 2.5" style hover effect — pure CSS.
+White text that hides on hover/focus/tap to reveal a cropped image—
+slightly enlarged and rotated—just like the reference. */
+
+.hl {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  /* reserve the character width to avoid shifting the layout */
+  line-height: 1;
+  letter-spacing: inherit;
+}
+
+.hl-char {
+  display: block;
+  margin: 0;
+  padding: 0;
+  transition: opacity 0.22s ease;
+}
+
+/* Line and words: arranged using flex without intermediate spacing, so that no extra air remains between the letters (HTML whitespace is ignored in flex). */
+.hover-line {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0;
+  white-space: nowrap;
+  letter-spacing: -0.03em;
+}
+
+.hover-word {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+}
+
+.hover-space {
+  flex: none;
+  width: 0.24em;
+}
+
+.hl-img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 1.3em;
+  width: auto;
+  max-width: none;
+  transform: translate(-50%, -52%) scale(0.7) rotate(-6deg);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: opacity, transform;
+  filter: drop-shadow(0 6px 24px rgb(0 0 0 / 0.45));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hl:hover .hl-char,
+.hl:focus-visible .hl-char,
+.hl.is-active .hl-char {
+  opacity: 0;
+}
+
+.hl:hover .hl-img,
+.hl:focus-visible .hl-img,
+.hl.is-active .hl-img {
+  opacity: 1;
+  transform: translate(-50%, -52%) scale(1) rotate(-4deg);
+}
+
+.hl:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 0.6);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .hl-char,
+  .hl-img {
+    transition: none;
+  }
+}

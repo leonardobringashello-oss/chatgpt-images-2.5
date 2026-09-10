@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@import "./hover-effect.css";
+
+html,
+body {
+  background: #000;
+}

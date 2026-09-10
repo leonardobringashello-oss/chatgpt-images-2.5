@@ -1,0 +1,22 @@
+{
+  "name": "efecto-chatgpt-images-2.5",
+  "version": "1.0.0",
+  "description": "Recreación open-source del efecto hover del título Introducing ChatGPT Images 2.5 de OpenAI (texto que cambia a imagen al pasar el cursor).",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["astro", "tailwind", "hover-effect", "openai", "demo"],
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "download-assets": "node scripts/download-assets.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.13.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "tailwindcss": "^4.1.12",
+    "typescript": "^5.9.2"
+  }
+}

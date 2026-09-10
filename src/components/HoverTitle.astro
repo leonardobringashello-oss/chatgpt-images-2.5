@@ -1,0 +1,56 @@
+---
+// Título completo "Introducing / ChatGPT Images 2.5".
+// - Línea 1 "Introducing": texto plano (así es en OpenAI).
+// - Línea 2: letras interactivas con autoplay en cascada opcional.
+import HoverLetter from './HoverLetter.astro';
+import { CHAT_GPT, IMAGES_WORD, VERSION_PART } from '../data/letters';
+
+interface Props {
+  autoplay?: boolean;
+  staggerMs?: number;
+}
+const { autoplay = true, staggerMs = 90 } = Astro.props;
+---
+<h1
+  aria-label="Introducing ChatGPT Images 2.5"
+  class="text-center font-medium tracking-tight text-white select-none"
+  style="font-size: clamp(2.5rem, 8vw, 6.5rem); line-height: 1.04;"
+>
+  <span class="block" aria-hidden="true">Introducing</span>
+  <span class="hover-line" aria-hidden="true" data-hover-title><span class="hover-word">{CHAT_GPT.map((l, i) => (
+        <HoverLetter char={l.char} images={l.images} alt={l.alt} eager={i < 3} />
+      ))}</span><span class="hover-space" aria-hidden="true"> </span><span class="hover-word">{IMAGES_WORD.map((l) => (
+        <HoverLetter char={l.char} images={l.images} alt={l.alt} />
+      ))}</span><span class="hover-space" aria-hidden="true"> </span><span class="hover-word">{VERSION_PART.map((l) => (
+        <HoverLetter char={l.char} images={l.images} alt={l.alt} />
+      ))}</span></span>
+</h1>
+
+{autoplay && (
+  <script define:vars={{ staggerMs }}>
+    // Auto-play inicial en cascada: activa cada letra ~600ms una vez.
+    // Se salta si el usuario prefiere movimiento reducido o ya interactuó.
+    (() => {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) return;
+      const run = () => {
+        const letters = Array.from(document.querySelectorAll('[data-hover-title] .hl'));
+        let interacted = false;
+        const stop = () => { interacted = true; };
+        letters.forEach((el) => {
+          el.addEventListener('pointerenter', stop, { once: true });
+          el.addEventListener('click', stop, { once: true });
+        });
+        letters.forEach((el, i) => {
+          setTimeout(() => {
+            if (interacted) return;
+            el.classList.add('is-active');
+            setTimeout(() => el.classList.remove('is-active'), 600);
+          }, 400 + i * staggerMs);
+        });
+      };
+      if (document.readyState === 'complete') run();
+      else window.addEventListener('load', run, { once: true });
+    })();
+  </script>
+)}

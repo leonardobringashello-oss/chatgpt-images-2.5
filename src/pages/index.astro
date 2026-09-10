@@ -1,0 +1,59 @@
+---
+import "../styles/global.css";
+import HoverTitle from "../components/HoverTitle.astro";
+
+// BASE_URL termina en '/': '/' en dev, '/<repo>/' en build (GitHub Pages).
+const base = import.meta.env.BASE_URL;
+const ogImage = new URL(`${base}og-image.png`.replace(/^\//, ''), Astro.site ?? 'https://leonardobringashello-oss.github.io/chatgpt-images-hover-title/').href;
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Efecto ChatGPT Images 2.5 — demo open-source</title>
+    <meta
+      name="description"
+      content="Recreación open-source del efecto hover del título Introducing ChatGPT Images 2.5: pasa el cursor y la letra cambia a imagen."
+    />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <link rel="icon" type="image/png" sizes="32x32" href={`${base}favicon-32.png`} />
+    <link rel="apple-touch-icon" sizes="180x180" href={`${base}apple-touch-icon.png`} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Efecto ChatGPT Images 2.5 — demo open-source" />
+    <meta
+      property="og:description"
+      content="Título donde cada letra cambia a imagen al pasar el cursor. Astro + Tailwind + CSS puro."
+    />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Efecto ChatGPT Images 2.5 — demo open-source" />
+    <meta
+      name="twitter:description"
+      content="Título donde cada letra cambia a imagen al pasar el cursor. Astro + Tailwind + CSS puro."
+    />
+    <meta name="twitter:image" content={ogImage} />
+  </head>
+  <body class="min-h-screen bg-black text-white antialiased">
+    <main
+      class="flex min-h-screen flex-col items-center justify-center gap-8 px-6 py-16"
+    >
+      <HoverTitle autoplay={true} staggerMs={90} />
+
+      <p class="text-center text-balance text-lg text-white/75">
+        Pasa el cursor (o toca / usa <kbd
+          class="rounded border border-white/40 bg-white/10 px-1">Tab</kbd
+        > +
+        <kbd class="rounded border border-white/40 bg-white/10 px-1">Enter</kbd>) sobre cada
+        letra de la segunda línea para verla cambiar a imagen.
+      </p>
+
+      <p class="text-xs text-white/70">
+        Imágenes © OpenAI (openai.com) — solo para estudio. Código MIT.
+      </p>
+    </main>
+  </body>
+</html>

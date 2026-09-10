@@ -1,0 +1,97 @@
+---
+// Una sola letra interactiva: texto por defecto, imagen al hover.
+// Props:
+//  - char: carácter visible (texto)
+//  - images: 1-2 rutas de imagen que ciclan en cada hover
+//  - alt: texto alternativo
+//  - eager: precargar con loading=eager (primeras letras)
+
+interface Props {
+  char: string;
+  images: string[];
+  alt: string;
+  eager?: boolean;
+}
+const { char, images, alt, eager = false } = Astro.props;
+const first = images[0];
+const hasVariants = images.length > 1;
+---
+<span
+  class="hl"
+  tabindex="0"
+  role="img"
+  aria-label={alt}
+  data-images={JSON.stringify(images)}
+  data-index="0"
+>
+  <span class="hl-char" aria-hidden="true">{char}</span>
+  <img
+    class="hl-img"
+    src={first}
+    alt=""
+    aria-hidden="true"
+    draggable="false"
+    loading={eager ? 'eager' : 'lazy'}
+    decoding="async"
+  />
+  {images.slice(1).map((src) => (
+    <link rel="preload" as="image" href={src} />
+  ))}
+</span>
+
+<script>
+  // Hidrata todos los .hl de la página una sola vez (sin framework).
+  // - mouseenter: cicla variante si hay 2 (como el "2" globo/LED de OpenAI)
+  // - click/tap: toggle para táctil
+  // - teclado Enter/Espacio: toggle
+  
+  function initHoverLetters() {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll<HTMLElement>('.hl').forEach((el) => {
+      if (el.dataset.init) return;
+      el.dataset.init = '1';
+      const images: string[] = JSON.parse(el.dataset.images || '[]');
+      const img = el.querySelector<HTMLImageElement>('.hl-img');
+      if (!img || images.length < 2) {
+        // aun sin variantes, soporta tap/teclado con .is-active
+        el.addEventListener('click', () => el.classList.toggle('is-active'));
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            el.classList.toggle('is-active');
+          }
+        });
+        return;
+      }
+      let i = 0;
+      el.addEventListener('mouseenter', () => {
+        i = (i + 1) % images.length;
+        // precarga suave: cambia solo cuando la siguiente ya está en caché
+        const next = new Image();
+        next.src = images[i];
+        const apply = () => {
+          img.src = images[i];
+          el.dataset.index = String(i);
+        };
+        if (next.complete) apply();
+        else {
+          next.onload = apply;
+          // fallback por si tarda: aplica igual a los 120ms
+          setTimeout(apply, 120);
+        }
+      });
+      el.addEventListener('click', () => el.classList.toggle('is-active'));
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          el.classList.toggle('is-active');
+        }
+      });
+      // en táctil, el primer tap muestra, el segundo esconde (sin navegación)
+      if (reduce) el.classList.remove('is-active');
+    });
+  }
+  initHoverLetters();
+  // re-ejecuta si Astro navega con View Transitions
+  document.addEventListener('astro:page-load', initHoverLetters);
+</script>
